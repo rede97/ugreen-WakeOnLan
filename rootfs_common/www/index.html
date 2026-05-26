@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WakeOnLan</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container { max-width: 500px; width: 100%; padding: 24px; }
+    h1 { text-align: center; margin-bottom: 24px; font-size: 1.5rem; color: #00d4aa; }
+    .card {
+      background: #16213e;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+    .device {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #0f3460;
+    }
+    .device:last-child { border-bottom: none; }
+    .device-name { font-weight: 600; }
+    .device-mac { font-size: 0.85rem; color: #888; }
+    button {
+      background: #00d4aa;
+      color: #1a1a2e;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    button:hover { background: #00e6b8; }
+    .add-device {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #0f3460;
+      border-radius: 6px;
+      background: #1a1a2e;
+      color: #eee;
+      font-size: 0.9rem;
+    }
+    input::placeholder { color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>WakeOnLan</h1>
+    <div class="card" id="device-list">
+      <div style="text-align: center; color: #888; padding: 20px;">
+        Loading devices...
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom: 12px;">Add Device</h3>
+      <div class="add-device">
+        <input type="text" id="name-input" placeholder="Device name">
+        <input type="text" id="mac-input" placeholder="MAC address (AA:BB:CC:DD:EE:FF)">
+        <button onclick="addDevice()">Add</button>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

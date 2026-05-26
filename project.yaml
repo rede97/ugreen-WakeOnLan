@@ -1,0 +1,33 @@
+spec_version: "2.1"
+app_id: com.mxq.wakeonlan
+version: 0.1.0
+support_arch:
+  - amd64
+  - arm64
+supports:
+  - app
+  - pc
+tag_types:
+  - utility
+depend_fw_version: "1.13.0.0000"
+
+# Runtime configuration
+start_cmd: ./wakeonlan_serv
+port: 21010
+proxy_path: api
+open_type: inner
+
+# Permissions
+permissions:
+  - NETWORK.ACCESS_INTERNET
+
+# Metadata
+i18n:
+  en-US:
+    name: "WakeOnLan"
+    description: "Wake-on-LAN network tool — remotely power on devices via magic packet"
+    author: "mxq"
+  zh-CN:
+    name: "网络唤醒"
+    description: "网络唤醒工具 — 通过魔术包远程开机"
+    author: "mxq"
