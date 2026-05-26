@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"text/tabwriter"
@@ -250,6 +251,9 @@ func runServer(args []string) {
 	fs := flag.NewFlagSet("server", flag.ExitOnError)
 	port := fs.Int("port", 21010, "HTTP server port")
 	fs.Parse(args)
+
+	debug.SetMemoryLimit(32 << 20) // 32 MiB soft cap
+	debug.SetGCPercent(50)         // trade CPU for lower memory
 
 	cors := func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {

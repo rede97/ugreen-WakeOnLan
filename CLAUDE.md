@@ -17,9 +17,12 @@ Development happens inside the Docker container defined at the workspace root:
 Build inside container:
 ```bash
 # From wakeonlan/ directory
-CGO_ENABLED=0 go build -buildvcs=false -o rootfs_amd64/wakeonlan_serv .
-GOARCH=arm64 CGO_ENABLED=0 go build -buildvcs=false -o rootfs_arm64/wakeonlan_serv .
+CGO_ENABLED=0 go build -buildvcs=false -ldflags="-s -w" -trimpath -o rootfs_amd64/wakeonlan_serv .
+GOARCH=arm64 CGO_ENABLED=0 go build -buildvcs=false -ldflags="-s -w" -trimpath -o rootfs_arm64/wakeonlan_serv .
 ```
+
+`-ldflags="-s -w"` strips debug info (~31% smaller, ~6MB), `-trimpath` removes source paths.
+Memory cap: server sets `GOMEMLIMIT=32MiB` + `GOGC=50` at startup. Override with env vars.
 
 Packaging: `ugcli pack` (produces `.upk` in `build_dir/pkgs/upk/`).
 
