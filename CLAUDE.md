@@ -1,65 +1,90 @@
-# WakeOnLan — UGREEN NAS APP
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+Wake-on-LAN app for UGREEN NAS (UGOS Pro). Native APP model — single Go binary with embedded web UI. Sends magic packets to wake devices on the LAN.
+
+## Build & Dev
+
+Development happens inside the Docker container defined at the workspace root:
+```bash
+./dev.sh              # enter container shell (pwd = /workspace = wakeonlan/)
+./dev.sh exec <cmd>   # run command in container
+```
+
+Build inside container:
+```bash
+# From wakeonlan/ directory
+CGO_ENABLED=0 go build -buildvcs=false -o rootfs_amd64/wakeonlan_serv .
+GOARCH=arm64 CGO_ENABLED=0 go build -buildvcs=false -o rootfs_arm64/wakeonlan_serv .
+```
+
+Packaging: `ugcli pack` (produces `.upk` in `build_dir/pkgs/upk/`).
+
+Container: `ugreen-go-dev`, host network, mounts `wakeonlan/` to `/workspace`.
 
 ## Architecture
-- **Backend**: Go 1.23+, single binary HTTP server (port 21010)
-- **Frontend**: Vanilla HTML/CSS/JS (no framework), served from `rootfs_common/www/`
-- **API**: `/api/devices` (GET list, POST add), `/api/wake` (POST send magic packet)
-- **App model**: UGREEN Native APP (not Docker)
-- **open_type**: `inner` (desktop window with JSSDK, gateway auth injection)
 
-## Directory Structure
+Single binary (`wakeonlan_serv`) with dual mode:
+- **No args**: HTTP server on port 21010, serves `www/` (falls back to `rootfs_common/www/`) + REST API
+- **With args**: CLI tool
+
+Zero external Go dependencies — stdlib only.
+
+### API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/devices` | List configured devices |
+| POST | `/api/devices` | Add device `{name, mac, interface}` |
+| DELETE | `/api/devices` | Delete device (match by all three fields) |
+| GET | `/api/interfaces` | List network interfaces with IPs |
+| POST | `/api/wake` | Send magic packet `{mac, interface}` |
+
+Device config persisted to `devices.json` alongside the binary. Shared between CLI and HTTP modes.
+
+### CLI Commands
+
+```
+wakeonlan_serv interfaces              List network interfaces
+wakeonlan_serv list                    List configured devices
+wakeonlan_serv add -name X -mac M -iface I
+wakeonlan_serv delete -name X -mac M -iface I
+wakeonlan_serv wake -name X            Wake by name (auto-fills MAC+iface)
+wakeonlan_serv wake -mac M -iface I    Wake manually
+```
+
+### Magic Packet Sending
+
+Looks up the named interface, gets its current IPv4 address, binds a UDP socket to that IP, and broadcasts to `255.255.255.255:9`.
+
+### Directory Structure
+
 ```
 wakeonlan/
 ├── project.yaml           # UGREEN app manifest (spec v2.1)
 ├── main.go                # Go backend entry point
 ├── go.mod / go.sum
+├── devices.json           # Persistent config (created at runtime)
 ├── rootfs_amd64/          # Compiled binary for x86_64
 ├── rootfs_arm64/          # Compiled binary for ARM64
-└── rootfs_common/
-    ├── icon.png            # ≥128x128 PNG
-    └── www/                # Served as static files by the Go server
-        ├── index.html
-        └── app.js
+├── rootfs_common/
+│   ├── icon.png           # ≥128x128 PNG
+│   └── www/               # Frontend (served by Go server)
+│       ├── index.html
+│       └── app.js
+└── build_dir/             # UPK packaging output
 ```
 
-## Build
-```bash
-# Inside container: docker exec -w /workspace/wakeonlan ugreen-go-dev
-CGO_ENABLED=0 go build -o rootfs_amd64/wakeonlan_serv .
-GOARCH=arm64 CGO_ENABLED=0 go build -o rootfs_arm64/wakeonlan_serv .
-```
+## UGREEN Constraints
 
-## Validation
-```bash
-docker exec -w /workspace/wakeonlan ugreen-go-dev ugcli check
-```
-
-## project.yaml Key Rules
-- `app_id`: immutable after first publish
-- `version`: semver
-- `permissions`: use strings like `NETWORK.ACCESS_INTERNET`, not maps
-- `i18n`: locale codes must be like `en-US`, `zh-CN`; each needs `name`, `description`, `author`
-- `depend_fw_version`: plain version like `1.13.0.0000`
-- `start_cmd`: `./wakeonlan_serv`
-- `proxy_path`: `api` → all `/api/*` requests forwarded to backend by UGREEN gateway
-- `entry`: frontend entry relative to rootfs_common, e.g. `www/index.html`
-
-## Auth (inner mode)
-- System gateway forwards authenticated user info in HTTP headers to backend port 21010
-- Frontend uses UGREEN JSSDK `getThirdToken()` for auth token
-
-## Constraints
-- Must compile with CGO_ENABLED=0 (static binary)
-- Binary name must match `start_cmd` in project.yaml
-- `rootfs_amd64/` and `rootfs_arm64/` MUST contain the compiled binary
-- All static frontend assets go in `rootfs_common/www/`
-- Icon must exist at `rootfs_common/icon.png` (128x128+)
-- No external Go dependencies unless absolutely necessary (std lib preferred for WOL)
-
-## Dev Container
-```bash
-cd ~/Codes/WakeOnLan
-./dev.sh              # enter container shell
-./dev.sh exec <cmd>   # run command in container
-```
-Container: `ugreen-go-dev` (Debian 12, Go 1.26.3, host network, GOPROXY=goproxy.cn)
+- `app_id: com.mxq.wakeonlan` — immutable after first publish
+- `open_type: inner` — desktop window mode, gateway injects auth headers
+- `proxy_path: api` — gateway forwards `/api/*` to backend port 21010
+- CGO_ENABLED=0 (static binary required)
+- Binary name must match `start_cmd` in project.yaml (`./wakeonlan_serv`)
+- `rootfs_amd64/` and `rootfs_arm64/` must each contain the compiled binary
+- `rootfs_common/www/` holds all static frontend assets; `rootfs_common/icon.png` (128x128+) required
+- UGREEN merges arch-specific rootfs with common rootfs at install time — at runtime, `www/` is alongside the binary, not under `rootfs_common/`

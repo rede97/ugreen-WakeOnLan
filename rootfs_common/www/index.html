@@ -12,72 +12,144 @@
       color: #eee;
       display: flex;
       justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+      padding: 24px;
     }
-    .container { max-width: 500px; width: 100%; padding: 24px; }
-    h1 { text-align: center; margin-bottom: 24px; font-size: 1.5rem; color: #00d4aa; }
+    .wrap { max-width: 540px; width: 100%; }
+    h1 {
+      text-align: center;
+      margin-bottom: 24px;
+      font-size: 1.4rem;
+      color: #00d4aa;
+      letter-spacing: 0.04em;
+    }
     .card {
       background: #16213e;
-      border-radius: 12px;
-      padding: 20px;
+      border-radius: 10px;
+      padding: 16px;
       margin-bottom: 12px;
     }
-    .device {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid #0f3460;
+    .card h3 {
+      font-size: 0.95rem;
+      color: #aaa;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
     }
-    .device:last-child { border-bottom: none; }
-    .device-name { font-weight: 600; }
-    .device-mac { font-size: 0.85rem; color: #888; }
-    button {
-      background: #00d4aa;
-      color: #1a1a2e;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
+    .empty {
+      text-align: center;
+      color: #666;
+      padding: 16px 0;
       font-size: 0.9rem;
     }
-    button:hover { background: #00e6b8; }
-    .add-device {
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #1f3460;
+    }
+    .row:last-child { border-bottom: none; }
+    .row .info { flex: 1; min-width: 0; }
+    .row .name { font-weight: 600; font-size: 0.95rem; }
+    .row .detail {
+      font-size: 0.8rem;
+      color: #888;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .btn {
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      white-space: nowrap;
+    }
+    .btn-wake {
+      background: #00d4aa;
+      color: #1a1a2e;
+    }
+    .btn-wake:hover { background: #00e6b8; }
+    .btn-del {
+      background: none;
+      color: #666;
+      padding: 8px 10px;
+    }
+    .btn-del:hover { color: #f55; }
+    .form-row {
       display: flex;
       gap: 8px;
-      margin-top: 16px;
+      flex-wrap: wrap;
     }
-    input {
-      flex: 1;
-      padding: 8px 12px;
-      border: 1px solid #0f3460;
+    .form-row input, .form-row select {
+      padding: 8px 10px;
+      border: 1px solid #1f3460;
       border-radius: 6px;
       background: #1a1a2e;
       color: #eee;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
+      flex: 1;
+      min-width: 100px;
     }
-    input::placeholder { color: #666; }
+    .form-row select option { background: #16213e; color: #eee; }
+    input::placeholder { color: #555; }
+    .btn-add {
+      background: #1f4068;
+      color: #eee;
+      flex: 0 0 auto;
+    }
+    .btn-add:hover { background: #1b5090; }
+
+    .toast {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .toast-ok  { background: #00d4aa; color: #1a1a2e; }
+    .toast-err { background: #e74c3c; color: #fff; }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="wrap">
     <h1>WakeOnLan</h1>
-    <div class="card" id="device-list">
-      <div style="text-align: center; color: #888; padding: 20px;">
-        Loading devices...
+
+    <div class="card">
+      <h3>Devices</h3>
+      <div id="device-list"><div class="empty">Loading...</div></div>
+    </div>
+
+    <div class="card">
+      <h3>Add Device</h3>
+      <div class="form-row" style="margin-bottom:8px">
+        <input type="text" id="in-name" placeholder="Hostname" style="flex:2">
+        <input type="text" id="in-mac" placeholder="MAC (AA:BB:CC:DD:EE:FF)" style="flex:2">
+      </div>
+      <div class="form-row">
+        <select id="in-iface"><option value="">-- select interface --</option></select>
+        <button class="btn btn-add" onclick="addDevice()">Add</button>
       </div>
     </div>
-    <div class="card">
-      <h3 style="margin-bottom: 12px;">Add Device</h3>
-      <div class="add-device">
-        <input type="text" id="name-input" placeholder="Device name">
-        <input type="text" id="mac-input" placeholder="MAC address (AA:BB:CC:DD:EE:FF)">
-        <button onclick="addDevice()">Add</button>
-      </div>
+    <div class="card" style="text-align:center">
+      <span style="color:#888;font-size:0.8rem">WakeOnLan v0.1.0</span>
+      <span style="color:#555;margin:0 8px">&middot;</span>
+      <a href="https://github.com/rede97/ugreen-WakeOnLan" target="_blank" style="color:#00d4aa;font-size:0.8rem;text-decoration:none">GitHub</a>
     </div>
   </div>
+
+  <div class="toast" id="toast"></div>
   <script src="app.js"></script>
 </body>
 </html>

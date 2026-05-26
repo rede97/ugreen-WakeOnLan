@@ -1,0 +1,25 @@
+services:
+  go-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ugreen-go-dev:latest
+    container_name: ugreen-go-dev
+    hostname: go-dev
+    network_mode: host
+    volumes:
+      - /home/mxq/Codes/wakeonlan:/workspace
+      - go-cache:/go
+      - go-mod-cache:/root/go
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+      - GOPROXY=https://goproxy.cn,direct
+      - CGO_ENABLED=0
+
+volumes:
+  go-cache:
+  go-mod-cache:
