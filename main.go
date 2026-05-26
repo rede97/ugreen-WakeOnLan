@@ -33,16 +33,13 @@ var (
 
 func main() {
 	loadDevices()
-	if len(os.Args) > 1 {
-		runCLI()
-	} else {
-		runServer()
-	}
-}
 
-func runCLI() {
-	cmd := os.Args[1]
-	switch cmd {
+	if len(os.Args) < 2 {
+		runServer(nil)
+		return
+	}
+
+	switch os.Args[1] {
 	case "interfaces", "ifaces":
 		cmdInterfaces()
 	case "list", "ls":
@@ -53,17 +50,15 @@ func runCLI() {
 		cmdDelete(os.Args[2:])
 	case "wake":
 		cmdWake(os.Args[2:])
-	case "-h", "--help", "help":
+	case "help", "-h", "--help":
 		printUsage()
 	default:
-		fmt.Fprintf(os.Stderr, "Unknown command: %s\n\n", cmd)
-		printUsage()
-		os.Exit(1)
+		runServer(os.Args[1:])
 	}
 }
 
 func printUsage() {
-	fmt.Println(`Usage: wakeonlan_serv [command]
+	fmt.Print(`Usage: wakeonlan_serv [command|flags]
 
 Commands:
   interfaces, ifaces   List available network interfaces
@@ -71,6 +66,7 @@ Commands:
   add                  Add a new device
   delete, rm           Delete a device
   wake                 Send a Wake-on-LAN magic packet
+  help                 Show this help
 
 Flags for add:
   -name     Device hostname
@@ -87,7 +83,11 @@ Flags for wake:
   -mac      Target MAC address (manual mode)
   -iface    Network interface (manual mode)
 
-Run without arguments to start the HTTP server.`)
+Server flags:
+  -port     HTTP server port (default: 21010)
+
+Run without arguments or flags to start the HTTP server on port 21010.
+`)
 }
 
 func getInterfaces() []NetIfaceInfo {
@@ -246,7 +246,11 @@ func cmdWake(args []string) {
 
 // --- HTTP Server ---
 
-func runServer() {
+func runServer(args []string) {
+	fs := flag.NewFlagSet("server", flag.ExitOnError)
+	port := fs.Int("port", 21010, "HTTP server port")
+	fs.Parse(args)
+
 	cors := func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -270,7 +274,7 @@ func runServer() {
 	}
 	http.Handle("/", http.FileServer(http.Dir(webDir)))
 
-	addr := ":21010"
+	addr := fmt.Sprintf(":%d", *port)
 	log.Printf("WakeOnLan server starting on %s", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
 }

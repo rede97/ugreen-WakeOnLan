@@ -15,6 +15,9 @@ build_dir/
 *.swp
 *.swo
 
+# Runtime data
+devices.json
+
 # OS
 .DS_Store
 Thumbs.db
