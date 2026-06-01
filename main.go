@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 	"text/tabwriter"
+	"time"
 )
 
 var configFile = func() string {
@@ -32,6 +33,12 @@ type Device struct {
 type NetIfaceInfo struct {
 	Name string   `json:"name"`
 	IPs  []string `json:"ips"`
+}
+
+type ArpEntry struct {
+	IP  string `json:"ip"`
+	MAC string `json:"mac"`
+	Dev string `json:"dev,omitempty"`
 }
 
 var (
@@ -58,6 +65,12 @@ func main() {
 		cmdDelete(os.Args[2:])
 	case "wake":
 		cmdWake(os.Args[2:])
+	case "arp":
+		cmdArp()
+	case "ping":
+		cmdPing(os.Args[2:])
+	case "scan":
+		cmdScan()
 	case "help", "-h", "--help":
 		printUsage()
 	default:
@@ -74,6 +87,9 @@ Commands:
   add                  Add a new device
   delete, rm           Delete a device
   wake                 Send a Wake-on-LAN magic packet
+  arp                  Scan ARP table for MAC-IP pairs
+  ping                 Ping an IP address via ICMP
+  scan                 ARP scan + ping all entries
   help                 Show this help
 
 Flags for add:
@@ -90,6 +106,9 @@ Flags for wake:
   -name     Device name (auto-fill MAC and interface from config)
   -mac      Target MAC address (manual mode)
   -iface    Network interface (manual mode)
+
+Flags for ping:
+  -ip       Target IP address
 
 Server flags:
   -port     HTTP server port (default: 21010)
@@ -252,6 +271,91 @@ func cmdWake(args []string) {
 	fmt.Printf("Magic packet sent to %s via %s\n", *mac, *iface)
 }
 
+func cmdArp() {
+	entries, err := readArpTable()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+	if len(entries) == 0 {
+		fmt.Println("No ARP entries found.")
+		return
+	}
+
+	mu.Lock()
+	macToName := make(map[string]string)
+	for _, d := range devices {
+		macToName[strings.ToUpper(d.MAC)] = d.Name
+	}
+	mu.Unlock()
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(w, "IP\tMAC\tDEVICE")
+	for _, e := range entries {
+		name := macToName[strings.ToUpper(e.MAC)]
+		if name == "" {
+			name = "-"
+		}
+		fmt.Fprintf(w, "%s\t%s\t%s\n", e.IP, e.MAC, name)
+	}
+	w.Flush()
+}
+
+func cmdPing(args []string) {
+	fs := flag.NewFlagSet("ping", flag.ExitOnError)
+	ip := fs.String("ip", "", "Target IP address")
+	fs.Parse(args)
+
+	if *ip == "" {
+		fmt.Println("Error: -ip is required")
+		fs.Usage()
+		os.Exit(1)
+	}
+
+	dur, err := pingICMP(*ip, 3*time.Second)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ping %s: %v\n", *ip, err)
+		os.Exit(1)
+	}
+	ms := float64(dur.Microseconds()) / 1000.0
+	fmt.Printf("Reply from %s: %.2f ms\n", *ip, ms)
+}
+
+func cmdScan() {
+	entries, err := readArpTable()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+	if len(entries) == 0 {
+		fmt.Println("No ARP entries found.")
+		return
+	}
+
+	mu.Lock()
+	macToName := make(map[string]string)
+	for _, d := range devices {
+		macToName[strings.ToUpper(d.MAC)] = d.Name
+	}
+	mu.Unlock()
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(w, "IP\tMAC\tDEVICE\tLATENCY")
+	for _, e := range entries {
+		name := macToName[strings.ToUpper(e.MAC)]
+		if name == "" {
+			name = "-"
+		}
+		latency := "-"
+		if dur, err := pingICMP(e.IP, 2*time.Second); err == nil {
+			ms := float64(dur.Microseconds()) / 1000.0
+			latency = fmt.Sprintf("%.2f ms", ms)
+		}
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", e.IP, e.MAC, name, latency)
+	}
+	w.Flush()
+}
+
 // --- HTTP Server ---
 
 func runServer(args []string) {
@@ -278,6 +382,8 @@ func runServer(args []string) {
 	http.HandleFunc("/api/devices", cors(handleDevices))
 	http.HandleFunc("/api/wake", cors(handleWake))
 	http.HandleFunc("/api/interfaces", cors(handleInterfaces))
+	http.HandleFunc("/api/arp", cors(handleArp))
+	http.HandleFunc("/api/ping", cors(handlePing))
 
 	webDir := "www"
 	if _, err := os.Stat(webDir); os.IsNotExist(err) {
@@ -412,6 +518,73 @@ func handleWake(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "ok", "mac": req.MAC})
+}
+
+// --- ARP Scan ---
+
+func handleArp(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	entries, err := readArpTable()
+	if err != nil {
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	// Build MAC → name lookup from configured devices
+	mu.Lock()
+	macToName := make(map[string]string)
+	for _, d := range devices {
+		macToName[strings.ToUpper(d.MAC)] = d.Name
+	}
+	mu.Unlock()
+
+	type out struct {
+		IP   string `json:"ip"`
+		MAC  string `json:"mac"`
+		Name string `json:"name,omitempty"`
+	}
+
+	var list []out
+	for _, e := range entries {
+		name := macToName[strings.ToUpper(e.MAC)]
+		list = append(list, out{IP: e.IP, MAC: e.MAC, Name: name})
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{"entries": list})
+}
+
+func readArpTable() ([]ArpEntry, error) {
+	data, err := os.ReadFile("/proc/net/arp")
+	if err != nil {
+		return nil, fmt.Errorf("cannot read /proc/net/arp: %v", err)
+	}
+
+	lines := strings.Split(string(data), "\n")
+	if len(lines) < 2 {
+		return nil, nil
+	}
+
+	var entries []ArpEntry
+	for _, line := range lines[1:] {
+		fields := strings.Fields(line)
+		if len(fields) < 4 {
+			continue
+		}
+		ip := fields[0]
+		hwType := fields[1]
+		flags := fields[2]
+		mac := fields[3]
+
+		// hwType must be 0x1 (Ethernet), flags must include 0x2 (reachable)
+		if hwType != "0x1" || flags != "0x2" {
+			continue
+		}
+
+		entries = append(entries, ArpEntry{IP: ip, MAC: mac})
+	}
+	return entries, nil
 }
 
 // --- Magic Packet ---

@@ -20,6 +20,7 @@ open_type: inner
 # Permissions
 permissions:
   - NETWORK.ACCESS_INTERNET
+  - SYSTEM.EXEC_SYSTEM_COMMAND
 
 # Metadata
 i18n:

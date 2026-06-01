@@ -131,6 +131,68 @@ function escAttr(s) {
   return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
+async function arpScan() {
+  const el = document.getElementById('arp-list');
+  el.innerHTML = '<div class="empty">Scanning...</div>';
+  try {
+    const r = await fetch(API + '/arp');
+    const d = await r.json();
+    const entries = d.entries || [];
+    if (entries.length === 0) {
+      el.innerHTML = '<div class="empty">No ARP entries found</div>';
+      return;
+    }
+    // Sort: configured devices first
+    entries.sort((a, b) => (a.name ? 0 : 1) - (b.name ? 0 : 1));
+    window._arpEntries = entries;
+
+    el.innerHTML =
+      '<table class="arp-table">' +
+        '<thead><tr><th>IP</th><th>MAC</th><th>Device</th><th>Delay</th><th></th></tr></thead>' +
+        '<tbody>' +
+        entries.map((e, i) =>
+          '<tr class="' + (e.name ? 'arp-device' : '') + '">' +
+            '<td data-label="IP">' + esc(e.ip) + '</td>' +
+            '<td data-label="MAC" class="arp-mac">' + esc(e.mac) + '</td>' +
+            '<td data-label="Device" class="arp-name">' + (e.name || '-') + '</td>' +
+            '<td data-label="Delay"><span id="ping-' + i + '">-</span></td>' +
+            '<td data-label="" class="arp-action">' +
+              '<button class="btn-ping" onclick="pingIP(' + i + ',\'' + escAttr(e.ip) + '\')">Ping</button></td>' +
+          '</tr>'
+        ).join('') +
+        '</tbody>' +
+      '</table>';
+  } catch (e) {
+    el.innerHTML = '<div class="empty" style="color:#e74c3c">ARP scan failed</div>';
+  }
+}
+
+async function pingIP(idx, ip) {
+  const span = document.getElementById('ping-' + idx);
+  span.className = '';
+  span.textContent = '...';
+  try {
+    const r = await fetch(API + '/ping', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ip: ip })
+    });
+    const d = await r.json();
+    if (d.alive) {
+      span.className = 'arp-ping';
+      span.textContent = d.latency;
+    } else {
+      span.className = 'arp-err';
+      span.textContent = 'timeout';
+      toast('Ping ' + ip + ': ' + (d.error || 'timeout'), false);
+    }
+  } catch (e) {
+    span.className = 'arp-err';
+    span.textContent = 'error';
+    toast('Ping ' + ip + ': network error', false);
+  }
+}
+
 (async function init() {
   await loadInterfaces();
   loadDevices();

@@ -140,6 +140,30 @@
     .toast-ok  { background: #00d4aa; color: #1a1a2e; }
     .toast-err { background: #e74c3c; color: #fff; }
     .btn-row { display: flex; gap: 6px; flex-shrink: 0; }
+    .arp-header { display: flex; align-items: center; justify-content: space-between; }
+    .arp-header h3 { margin-bottom: 0; }
+    .btn-scan { background: #1f4068; color: #eee; }
+    .btn-scan:hover { background: #1b5090; }
+    .arp-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .arp-table th { color: #888; font-weight: 600; text-align: left; padding: 4px 8px; border-bottom: 1px solid #1f3460; }
+    .arp-table td { padding: 4px 8px; color: #ccc; }
+    .arp-table .arp-mac { color: #00d4aa; font-family: monospace; }
+    .arp-table .arp-name { color: #5db8fe; font-weight: 600; }
+    .arp-table .arp-ping { color: #00d4aa; font-size: 0.72rem; }
+    .arp-table .arp-err { color: #e74c3c; font-size: 0.72rem; }
+    .btn-ping {
+      background: none;
+      border: 1px solid #00d4aa;
+      color: #00d4aa;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+    }
+    .btn-ping:hover { background: #00d4aa; color: #1a1a2e; }
+    .btn-ping:disabled { opacity: 0.4; cursor: default; }
+    .arp-device { background: rgba(0,212,170,0.06); }
+    .arp-action { white-space: nowrap; }
 
     @media (max-width: 480px) {
       body { padding: 12px; }
@@ -157,6 +181,17 @@
       .form-row { gap: 6px; }
       .form-row input, .form-row select, .form-row .in-name, .form-row .in-mac, .form-row .btn-add { flex: 1 1 100%; padding: 7px 8px; font-size: 0.8rem; }
       .toast { width: 90%; text-align: center; font-size: 0.82rem; padding: 8px 16px; }
+      .arp-header { flex-direction: column; align-items: stretch; gap: 8px; }
+      .arp-header h3 { margin-bottom: 0; }
+      .btn-scan { width: 100%; text-align: center; }
+      .arp-table, .arp-table tbody, .arp-table tr, .arp-table td { display: block; width: 100%; }
+      .arp-table thead { display: none; }
+      .arp-table tr { padding: 8px 6px; border-bottom: 1px solid #1f3460; }
+      .arp-table td { padding: 2px 0; font-size: 0.72rem; }
+      .arp-table td:before { content: attr(data-label) ": "; color: #888; font-weight: 600; }
+      .arp-table td[data-label=""]:before { content: none; }
+      .arp-action { margin-top: 6px; }
+      .btn-ping { width: 100%; padding: 6px 0; font-size: 0.75rem; }
     }
   </style>
 </head>
@@ -180,6 +215,14 @@
         <button class="btn btn-add" onclick="addDevice()">Add</button>
       </div>
     </div>
+    <div class="card">
+      <div class="arp-header">
+        <h3>ARP Scan</h3>
+        <button class="btn btn-scan" onclick="arpScan()">Scan</button>
+      </div>
+      <div id="arp-list" style="margin-top:12px"></div>
+    </div>
+
     <div class="card" style="text-align:center">
       <span style="color:#888;font-size:0.8rem">WakeOnLan v0.2.0</span>
       <span style="color:#555;margin:0 8px">&middot;</span>
