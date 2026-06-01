@@ -14,6 +14,17 @@ Development happens inside the Docker container defined at the workspace root:
 ./dev.sh exec <cmd>   # run command in container
 ```
 
+### Frontend (Vue 3 + Vite)
+
+```bash
+cd frontend
+npm install --registry https://registry.npmjs.org   # npmmirror lacks @ugreen-nas packages
+npm run dev                                          # hot-reload dev server
+npm run build                                        # production build → rootfs_common/www/
+```
+
+### Backend (Go)
+
 Build inside container:
 ```bash
 # From wakeonlan/ directory
@@ -24,7 +35,9 @@ GOARCH=arm64 CGO_ENABLED=0 go build -buildvcs=false -ldflags="-s -w" -trimpath -
 `-ldflags="-s -w"` strips debug info (~31% smaller, ~6MB), `-trimpath` removes source paths.
 Memory cap: server sets `GOMEMLIMIT=32MiB` + `GOGC=50` at startup. Override with env vars.
 
-Packaging: `ugcli pack` (produces `.upk` in `build_dir/pkgs/upk/`).
+### One-shot Pack
+
+`./pack.sh N` builds frontend + Go (amd64 + arm64) + icon + `ugcli pack`.
 
 Container: `ugreen-go-dev`, host network, mounts `wakeonlan/` to `/workspace`.
 
@@ -71,6 +84,13 @@ wakeonlan/
 ├── main.go                # Go backend entry point
 ├── go.mod / go.sum
 ├── devices.json           # Persistent config (created at runtime)
+├── frontend/              # Vue 3 + Vite source
+│   ├── package.json
+│   ├── vite.config.js     # UgosViteBuilder plugin, builds to dist/ then copies
+│   ├── index.html         # Vite entry point
+│   └── src/
+│       ├── main.js        # Vue app + UGOS Core SDK init
+│       └── App.vue        # Single-file component (whole UI)
 ├── rootfs_amd64/
 │   └── bin/
 │       └── wakeonlan_serv # x86_64 binary
@@ -79,9 +99,9 @@ wakeonlan/
 │       └── wakeonlan_serv # ARM64 binary
 ├── rootfs_common/
 │   ├── icon.png           # 256x256 PNG (UGREEN spec)
-│   └── www/               # Frontend (served by Go server)
+│   └── www/               # Frontend build output (served by Go server)
 │       ├── index.html
-│       └── app.js
+│       └── assets/
 └── build_dir/             # UPK packaging output
 ```
 

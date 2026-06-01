@@ -1,0 +1,20 @@
+{
+  "name": "wakeonlan-frontend",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && rm -rf ../rootfs_common/www && mkdir -p ../rootfs_common/www && cp -r dist/* ../rootfs_common/www/",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ugreen-nas/core": "^1.7.1",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@ugreen-nas/builder-open": "^0.0.8",
+    "@vitejs/plugin-vue": "^5.2.0",
+    "vite": "^6.0.0"
+  }
+}

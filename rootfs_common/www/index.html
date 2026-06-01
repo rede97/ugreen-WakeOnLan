@@ -1,172 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+  const ugosAppId = (window.ugosAppId = 'unknown');
+  const ugosAppVersion = (window.ugosAppVersion = '6');
+</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WakeOnLan</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #1a1a2e;
-      color: #eee;
-      display: flex;
-      justify-content: center;
-      padding: 24px;
-    }
-    .wrap { max-width: 540px; width: 100%; }
-    h1 {
-      text-align: center;
-      margin-bottom: 24px;
-      font-size: 1.4rem;
-      color: #00d4aa;
-      letter-spacing: 0.04em;
-    }
-    .card {
-      background: #16213e;
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 12px;
-    }
-    .card h3 {
-      font-size: 0.95rem;
-      color: #aaa;
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-    .empty {
-      text-align: center;
-      color: #666;
-      padding: 16px 0;
-      font-size: 0.9rem;
-    }
-    .device-card {
-      display: flex;
-      align-items: center;
-      gap: 0;
-      background: #1a2240;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      padding: 12px;
-    }
-    .device-card .info { flex: 1; min-width: 0; }
-    .device-card .name { font-weight: 600; font-size: 0.95rem; }
-    .device-card .iface-badge {
-      display: inline-block;
-      background: #1f4068;
-      color: #5db8fe;
-      font-size: 0.72rem;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 4px;
-      margin-right: 4px;
-      vertical-align: middle;
-    }
-    .device-card .dot {
-      color: #555;
-      margin: 0 4px;
-      vertical-align: middle;
-      font-size: 0.8rem;
-    }
-    .device-card .mac {
-      font-size: 0.78rem;
-      color: #00d4aa;
-      font-family: monospace;
-      margin-top: 4px;
-      padding-left: 2px;
-    }
-    .btn {
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 600;
-      padding: 8px 14px;
-      white-space: nowrap;
-    }
-    .btn-wake {
-      background: #00d4aa;
-      color: #1a1a2e;
-    }
-    .btn-wake:hover { background: #00e6b8; }
-    .btn-del {
-      background: none;
-      color: #666;
-      padding: 8px 10px;
-    }
-    .btn-del:hover { color: #f55; }
-    .form-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .form-row input, .form-row select {
-      padding: 8px 10px;
-      border: 1px solid #1f3460;
-      border-radius: 6px;
-      background: #1a1a2e;
-      color: #eee;
-      font-size: 0.85rem;
-      flex: 1;
-      min-width: 100px;
-    }
-    .form-row select option { background: #16213e; color: #eee; }
-    input::placeholder { color: #555; }
-    .btn-add {
-      background: #1f4068;
-      color: #eee;
-      flex: 0 0 auto;
-    }
-    .btn-add:hover { background: #1b5090; }
-
-    .toast {
-      position: fixed;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 10px 24px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      z-index: 999;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-    }
-    .toast.show { opacity: 1; }
-    .toast-ok  { background: #00d4aa; color: #1a1a2e; }
-    .toast-err { background: #e74c3c; color: #fff; }
-  </style>
+  <script type="module" crossorigin src="/assets/index-DuJt8J7z.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DLIMWSVm.css">
 </head>
 <body>
-  <div class="wrap">
-    <h1>WakeOnLan</h1>
-
-    <div class="card">
-      <h3>Devices</h3>
-      <div id="device-list"><div class="empty">Loading...</div></div>
-    </div>
-
-    <div class="card">
-      <h3>Add Device</h3>
-      <div class="form-row" style="margin-bottom:8px">
-        <input type="text" id="in-name" placeholder="Hostname" style="flex:2">
-        <input type="text" id="in-mac" placeholder="MAC (AA:BB:CC:DD:EE:FF)" style="flex:2">
-      </div>
-      <div class="form-row">
-        <select id="in-iface"><option value="">-- select interface --</option></select>
-        <button class="btn btn-add" onclick="addDevice()">Add</button>
-      </div>
-    </div>
-    <div class="card" style="text-align:center">
-      <span style="color:#888;font-size:0.8rem">WakeOnLan v0.1.0</span>
-      <span style="color:#555;margin:0 8px">&middot;</span>
-      <a href="https://github.com/rede97/ugreen-WakeOnLan" target="_blank" style="color:#00d4aa;font-size:0.8rem;text-decoration:none">GitHub</a>
-    </div>
-  </div>
-
-  <div class="toast" id="toast"></div>
-  <script src="app.js"></script>
+  <div id="app"></div>
 </body>
 </html>
