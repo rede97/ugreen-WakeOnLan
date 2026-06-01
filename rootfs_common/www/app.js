@@ -34,16 +34,18 @@ async function loadDevices() {
       return;
     }
     el.innerHTML = list.map(dev => {
-      const iface = ifaces.find(i => i.name === dev.interface);
-      const ips = iface ? iface.ips.join(', ') : dev.interface;
-      return '<div class="row">' +
+      return '<div class="device-card">' +
         '<div class="info">' +
-          '<div class="name">' + esc(dev.name) + '</div>' +
-          '<div class="detail">' + esc(dev.mac) + ' &middot; ' + esc(ips) + '</div>' +
+          '<div class="name">' +
+            '<span class="iface-badge">' + esc(dev.interface) + '</span>' +
+            '<span class="dot">&middot;</span>' +
+            esc(dev.name) +
+          '</div>' +
+          '<div class="mac">' + esc(dev.mac) + '</div>' +
         '</div>' +
-        '<button class="btn btn-wake" title="Send Wake-on-LAN" ' +
+        '<button class="btn btn-wake" title="Wake up" ' +
           'onclick="wakeDevice(\'' + escAttr(dev.mac) + '\',\'' + escAttr(dev.interface) + '\')">&#9654;</button>' +
-        '<button class="btn btn-del" title="Delete device" ' +
+        '<button class="btn btn-del" title="Delete" ' +
           'onclick="delDevice(\'' + escAttr(dev.name) + '\',\'' + escAttr(dev.mac) + '\',\'' + escAttr(dev.interface) + '\')">&#10005;</button>' +
         '</div>';
     }).join('');

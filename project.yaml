@@ -1,6 +1,6 @@
 spec_version: "2.1"
 app_id: com.mxq.wakeonlan
-version: 0.1.0
+version: 0.2.0
 support_arch:
   - amd64
   - arm64
@@ -12,7 +12,7 @@ tag_types:
 depend_fw_version: "1.13.0.0000"
 
 # Runtime configuration
-start_cmd: ./wakeonlan_serv
+start_cmd: bin/wakeonlan_serv
 port: 21010
 proxy_path: api
 open_type: inner

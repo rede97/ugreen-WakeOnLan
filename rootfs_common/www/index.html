@@ -41,23 +41,40 @@
       padding: 16px 0;
       font-size: 0.9rem;
     }
-    .row {
+    .device-card {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 10px 0;
-      border-bottom: 1px solid #1f3460;
+      gap: 0;
+      background: #1a2240;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      padding: 12px;
     }
-    .row:last-child { border-bottom: none; }
-    .row .info { flex: 1; min-width: 0; }
-    .row .name { font-weight: 600; font-size: 0.95rem; }
-    .row .detail {
+    .device-card .info { flex: 1; min-width: 0; }
+    .device-card .name { font-weight: 600; font-size: 0.95rem; }
+    .device-card .iface-badge {
+      display: inline-block;
+      background: #1f4068;
+      color: #5db8fe;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .device-card .dot {
+      color: #555;
+      margin: 0 4px;
+      vertical-align: middle;
       font-size: 0.8rem;
-      color: #888;
-      margin-top: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    }
+    .device-card .mac {
+      font-size: 0.78rem;
+      color: #00d4aa;
+      font-family: monospace;
+      margin-top: 4px;
+      padding-left: 2px;
     }
     .btn {
       border: none;

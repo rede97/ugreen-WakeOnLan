@@ -17,8 +17,8 @@ Development happens inside the Docker container defined at the workspace root:
 Build inside container:
 ```bash
 # From wakeonlan/ directory
-CGO_ENABLED=0 go build -buildvcs=false -ldflags="-s -w" -trimpath -o rootfs_amd64/wakeonlan_serv .
-GOARCH=arm64 CGO_ENABLED=0 go build -buildvcs=false -ldflags="-s -w" -trimpath -o rootfs_arm64/wakeonlan_serv .
+CGO_ENABLED=0 go build -buildvcs=false -ldflags="-s -w" -trimpath -o rootfs_amd64/bin/wakeonlan_serv .
+GOARCH=arm64 CGO_ENABLED=0 go build -buildvcs=false -ldflags="-s -w" -trimpath -o rootfs_arm64/bin/wakeonlan_serv .
 ```
 
 `-ldflags="-s -w"` strips debug info (~31% smaller, ~6MB), `-trimpath` removes source paths.
@@ -71,10 +71,14 @@ wakeonlan/
 ├── main.go                # Go backend entry point
 ├── go.mod / go.sum
 ├── devices.json           # Persistent config (created at runtime)
-├── rootfs_amd64/          # Compiled binary for x86_64
-├── rootfs_arm64/          # Compiled binary for ARM64
+├── rootfs_amd64/
+│   └── bin/
+│       └── wakeonlan_serv # x86_64 binary
+├── rootfs_arm64/
+│   └── bin/
+│       └── wakeonlan_serv # ARM64 binary
 ├── rootfs_common/
-│   ├── icon.png           # ≥128x128 PNG
+│   ├── icon.png           # 256x256 PNG (UGREEN spec)
 │   └── www/               # Frontend (served by Go server)
 │       ├── index.html
 │       └── app.js
@@ -87,7 +91,7 @@ wakeonlan/
 - `open_type: inner` — desktop window mode, gateway injects auth headers
 - `proxy_path: api` — gateway forwards `/api/*` to backend port 21010
 - CGO_ENABLED=0 (static binary required)
-- Binary name must match `start_cmd` in project.yaml (`./wakeonlan_serv`)
-- `rootfs_amd64/` and `rootfs_arm64/` must each contain the compiled binary
-- `rootfs_common/www/` holds all static frontend assets; `rootfs_common/icon.png` (128x128+) required
+- `start_cmd`: `bin/wakeonlan_serv` (binary in arch-specific `bin/` dir)
+- `rootfs_amd64/bin/` and `rootfs_arm64/bin/` must each contain the compiled binary
+- `rootfs_common/www/` holds all static frontend assets; `rootfs_common/icon.png` (256x256, white/light bg) required
 - UGREEN merges arch-specific rootfs with common rootfs at install time — at runtime, `www/` is alongside the binary, not under `rootfs_common/`

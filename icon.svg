@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <clipPath id="round">
+      <rect x="0" y="0" width="256" height="256" rx="52"/>
+    </clipPath>
+  </defs>
+
+  <!-- White background -->
+  <rect x="0" y="0" width="256" height="256" rx="52" fill="#f8f8f8"/>
+
+  <!-- Border: 0.5px, 8% black per UGREEN spec -->
+  <rect x="0.25" y="0.25" width="255.5" height="255.5" rx="52" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="0.5"/>
+
+  <!--
+    Power symbol (IEC 60417-5009)
+    Circle: center (128,118), r=40, gap 30px at top
+    Teal color matching app accent (#333333)
+  -->
+  <g fill="none" stroke="#333333" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#round)">
+    <!-- Right half-circle: gap-right to bottom -->
+    <path d="M 144 81.3 A 40 40 0 0 1 128 158"/>
+    <!-- Left half-circle: bottom to gap-left -->
+    <path d="M 128 158 A 40 40 0 0 1 112 81.3"/>
+    <!-- Vertical stem -->
+    <line x1="128" y1="38" x2="128" y2="126"/>
+  </g>
+
+  <!-- Ethernet badge (bottom-right corner) -->
+  <circle cx="204" cy="204" r="30" fill="#f0f0f0" stroke="#e0e0e0" stroke-width="1.5"/>
+
+  <!-- RJ45 port icon inside badge -->
+  <g transform="translate(188, 190)" fill="none">
+    <rect x="0" y="0" width="32" height="26" rx="5" stroke="#333333" stroke-width="2.5"/>
+    <path d="M 6 5 L 26 5 L 24 16 L 8 16 Z" stroke="#333333" stroke-width="1.5"/>
+    <g fill="#333333" stroke="none">
+      <rect x="8" y="7.5" width="1.6" height="4" rx="0.8"/>
+      <rect x="11" y="7.5" width="1.6" height="4" rx="0.8"/>
+      <rect x="14" y="7.5" width="1.6" height="4" rx="0.8"/>
+      <rect x="17" y="7.5" width="1.6" height="4" rx="0.8"/>
+      <rect x="20" y="7.5" width="1.6" height="4" rx="0.8"/>
+      <rect x="23" y="7.5" width="1.6" height="4" rx="0.8"/>
+    </g>
+    <!-- Link LED -->
+    <circle cx="9" cy="23" r="2.5" fill="#333333" stroke="none"/>
+  </g>
+</svg>
