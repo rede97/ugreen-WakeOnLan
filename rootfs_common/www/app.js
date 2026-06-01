@@ -146,6 +146,8 @@ async function arpScan() {
     entries.sort((a, b) => (a.name ? 0 : 1) - (b.name ? 0 : 1));
     window._arpEntries = entries;
     var pingOk = d.ping_ok;
+    var arpOk = d.arp_ok;
+    if (!arpOk) { el.innerHTML = '<div class="empty">ARP table unavailable</div>'; return; }
 
     el.innerHTML =
       '<table class="arp-table">' +
