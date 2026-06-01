@@ -18,11 +18,11 @@
   -->
   <g fill="none" stroke="#333333" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#round)">
     <!-- Right half-circle: gap-right to bottom -->
-    <path d="M 144 81.3 A 40 40 0 0 1 128 158"/>
+    <path d="M 144.5 70.8 A 50 50 0 0 1 128 168"/>
     <!-- Left half-circle: bottom to gap-left -->
-    <path d="M 128 158 A 40 40 0 0 1 112 81.3"/>
+    <path d="M 128 168 A 50 50 0 0 1 111.5 70.8"/>
     <!-- Vertical stem -->
-    <line x1="128" y1="38" x2="128" y2="126"/>
+    <line x1="128" y1="42" x2="128" y2="122"/>
   </g>
 
   <!-- Ethernet badge (bottom-right corner) -->
