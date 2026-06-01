@@ -14,7 +14,14 @@ import (
 	"text/tabwriter"
 )
 
-const configFile = "devices.json"
+var configFile = func() string {
+	if dir := os.Getenv("UGAPP_DATA_DIR"); dir != "" {
+		if err := os.MkdirAll(dir, 0755); err == nil {
+			return dir + "/devices.json"
+		}
+	}
+	return "devices.json"
+}()
 
 type Device struct {
 	Name      string `json:"name"`
