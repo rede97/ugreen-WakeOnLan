@@ -42,8 +42,9 @@ type ArpEntry struct {
 }
 
 var (
-	devices []Device
-	mu      sync.Mutex
+	devices     []Device
+	mu          sync.Mutex
+	pingCapable bool
 )
 
 func main() {
@@ -201,6 +202,11 @@ func cmdAdd(args []string) {
 	}
 
 	mu.Lock()
+	if err := checkDeviceConflict(d.Name, d.MAC); err != "" {
+		mu.Unlock()
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		os.Exit(1)
+	}
 	devices = append(devices, d)
 	saveDevices()
 	mu.Unlock()
@@ -290,13 +296,13 @@ func cmdArp() {
 	mu.Unlock()
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "IP\tMAC\tDEVICE")
+	fmt.Fprintln(w, "IP\tMAC\tIFACE\tDEVICE")
 	for _, e := range entries {
 		name := macToName[strings.ToUpper(e.MAC)]
 		if name == "" {
 			name = "-"
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\n", e.IP, e.MAC, name)
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", e.IP, e.MAC, e.Dev, name)
 	}
 	w.Flush()
 }
@@ -340,7 +346,7 @@ func cmdScan() {
 	mu.Unlock()
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "IP\tMAC\tDEVICE\tLATENCY")
+	fmt.Fprintln(w, "IP\tMAC\tIFACE\tDEVICE\tLATENCY")
 	for _, e := range entries {
 		name := macToName[strings.ToUpper(e.MAC)]
 		if name == "" {
@@ -351,7 +357,7 @@ func cmdScan() {
 			ms := float64(dur.Microseconds()) / 1000.0
 			latency = fmt.Sprintf("%.2f ms", ms)
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", e.IP, e.MAC, name, latency)
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", e.IP, e.MAC, e.Dev, name, latency)
 	}
 	w.Flush()
 }
@@ -391,6 +397,14 @@ func runServer(args []string) {
 	}
 	http.Handle("/", http.FileServer(http.Dir(webDir)))
 
+	// Test ping capability at startup
+	if _, err := pingICMP("127.0.0.1", 1*time.Second); err == nil {
+		pingCapable = true
+		log.Printf("Ping capability: available")
+	} else {
+		log.Printf("Ping capability: unavailable (%v)", err)
+	}
+
 	addr := fmt.Sprintf(":%d", *port)
 	log.Printf("WakeOnLan server starting on %s", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
@@ -410,6 +424,19 @@ func loadDevices() {
 		log.Printf("WARN: cannot parse %s: %v", configFile, err)
 	}
 	log.Printf("Loaded %d device(s) from %s", len(devices), configFile)
+}
+
+func checkDeviceConflict(name, mac string) string {
+	upperMAC := strings.ToUpper(mac)
+	for _, d := range devices {
+		if strings.EqualFold(d.Name, name) {
+			return fmt.Sprintf("device name '%s' already exists", name)
+		}
+		if strings.ToUpper(d.MAC) == upperMAC {
+			return fmt.Sprintf("MAC address %s already exists (%s)", mac, d.Name)
+		}
+	}
+	return ""
 }
 
 func saveDevices() {
@@ -459,6 +486,11 @@ func handleDevices(w http.ResponseWriter, r *http.Request) {
 		if _, err := net.ParseMAC(d.MAC); err != nil {
 			w.WriteHeader(400)
 			json.NewEncoder(w).Encode(map[string]string{"error": "invalid MAC address"})
+			return
+		}
+		if err := checkDeviceConflict(d.Name, d.MAC); err != "" {
+			w.WriteHeader(409)
+			json.NewEncoder(w).Encode(map[string]string{"error": err})
 			return
 		}
 		devices = append(devices, d)
@@ -541,18 +573,22 @@ func handleArp(w http.ResponseWriter, r *http.Request) {
 	mu.Unlock()
 
 	type out struct {
-		IP   string `json:"ip"`
-		MAC  string `json:"mac"`
-		Name string `json:"name,omitempty"`
+		IP    string `json:"ip"`
+		MAC   string `json:"mac"`
+		Iface string `json:"iface,omitempty"`
+		Name  string `json:"name,omitempty"`
 	}
 
 	var list []out
 	for _, e := range entries {
 		name := macToName[strings.ToUpper(e.MAC)]
-		list = append(list, out{IP: e.IP, MAC: e.MAC, Name: name})
+		list = append(list, out{IP: e.IP, MAC: e.MAC, Iface: e.Dev, Name: name})
 	}
 
-	json.NewEncoder(w).Encode(map[string]interface{}{"entries": list})
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"entries": list,
+		"ping_ok": pingCapable,
+	})
 }
 
 func readArpTable() ([]ArpEntry, error) {
@@ -582,7 +618,11 @@ func readArpTable() ([]ArpEntry, error) {
 			continue
 		}
 
-		entries = append(entries, ArpEntry{IP: ip, MAC: mac})
+			iface := ""
+			if len(fields) >= 6 {
+				iface = fields[5]
+			}
+		entries = append(entries, ArpEntry{IP: ip, MAC: mac, Dev: iface})
 	}
 	return entries, nil
 }

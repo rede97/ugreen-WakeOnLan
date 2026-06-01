@@ -145,19 +145,25 @@ async function arpScan() {
     // Sort: configured devices first
     entries.sort((a, b) => (a.name ? 0 : 1) - (b.name ? 0 : 1));
     window._arpEntries = entries;
+    var pingOk = d.ping_ok;
 
     el.innerHTML =
       '<table class="arp-table">' +
-        '<thead><tr><th>IP</th><th>MAC</th><th>Device</th><th>Delay</th><th></th></tr></thead>' +
+        '<thead><tr><th>IP</th><th>MAC</th><th>Iface</th><th>Device</th>' +
+          (pingOk ? '<th>Delay</th><th></th>' : '') +
+        '</tr></thead>' +
         '<tbody>' +
         entries.map((e, i) =>
           '<tr class="' + (e.name ? 'arp-device' : '') + '">' +
             '<td data-label="IP">' + esc(e.ip) + '</td>' +
             '<td data-label="MAC" class="arp-mac">' + esc(e.mac) + '</td>' +
+            '<td data-label="Iface">' + esc(e.iface || '-') + '</td>' +
             '<td data-label="Device" class="arp-name">' + (e.name || '-') + '</td>' +
-            '<td data-label="Delay"><span id="ping-' + i + '">-</span></td>' +
-            '<td data-label="" class="arp-action">' +
-              '<button class="btn-ping" onclick="pingIP(' + i + ',\'' + escAttr(e.ip) + '\')">Ping</button></td>' +
+            (pingOk ?
+              '<td data-label="Delay"><span id="ping-' + i + '">-</span></td>' +
+              '<td data-label="" class="arp-action">' +
+                '<button class="btn-ping" onclick="pingIP(' + i + ',\'' + escAttr(e.ip) + '\')">Ping</button></td>'
+              : '') +
           '</tr>'
         ).join('') +
         '</tbody>' +
