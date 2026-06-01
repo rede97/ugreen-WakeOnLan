@@ -91,11 +91,11 @@
     }
     .btn-wake:hover { background: #00e6b8; }
     .btn-del {
-      background: none;
-      color: #666;
+      background: #c0392b;
+      color: #fff;
       padding: 8px 10px;
     }
-    .btn-del:hover { color: #f55; }
+    .btn-del:hover { background: #e74c3c; }
     .form-row {
       display: flex;
       gap: 8px;
@@ -111,6 +111,8 @@
       flex: 1;
       min-width: 100px;
     }
+    .form-row .in-name,
+    .form-row .in-mac { flex: 2; }
     .form-row select option { background: #16213e; color: #eee; }
     input::placeholder { color: #555; }
     .btn-add {
@@ -137,6 +139,25 @@
     .toast.show { opacity: 1; }
     .toast-ok  { background: #00d4aa; color: #1a1a2e; }
     .toast-err { background: #e74c3c; color: #fff; }
+    .btn-row { display: flex; gap: 6px; flex-shrink: 0; }
+
+    @media (max-width: 480px) {
+      body { padding: 12px; }
+      h1 { font-size: 1.2rem; margin-bottom: 16px; }
+      .card { padding: 12px; margin-bottom: 8px; }
+      .card h3 { font-size: 0.85rem; margin-bottom: 8px; }
+      .device-card { flex-wrap: wrap; gap: 8px; padding: 12px 10px; }
+      .device-card .info { flex: 1 1 100%; }
+      .device-card .name { font-size: 0.88rem; }
+      .device-card .mac { font-size: 0.74rem; }
+      .btn-row { width: 100%; }
+      .btn-row .btn-wake { flex: 7; }
+      .btn-row .btn-del { flex: 3; }
+      .btn { font-size: 0.82rem; padding: 8px 10px; }
+      .form-row { gap: 6px; }
+      .form-row input, .form-row select, .form-row .in-name, .form-row .in-mac, .form-row .btn-add { flex: 1 1 100%; padding: 7px 8px; font-size: 0.8rem; }
+      .toast { width: 90%; text-align: center; font-size: 0.82rem; padding: 8px 16px; }
+    }
   </style>
 </head>
 <body>
@@ -151,8 +172,8 @@
     <div class="card">
       <h3>Add Device</h3>
       <div class="form-row" style="margin-bottom:8px">
-        <input type="text" id="in-name" placeholder="Hostname" style="flex:2">
-        <input type="text" id="in-mac" placeholder="MAC (AA:BB:CC:DD:EE:FF)" style="flex:2">
+        <input type="text" id="in-name" placeholder="Hostname" class="in-name">
+        <input type="text" id="in-mac" placeholder="MAC (AA:BB:CC:DD:EE:FF)" class="in-mac">
       </div>
       <div class="form-row">
         <select id="in-iface"><option value="">-- select interface --</option></select>
@@ -160,7 +181,7 @@
       </div>
     </div>
     <div class="card" style="text-align:center">
-      <span style="color:#888;font-size:0.8rem">WakeOnLan v0.1.0</span>
+      <span style="color:#888;font-size:0.8rem">WakeOnLan v0.2.0</span>
       <span style="color:#555;margin:0 8px">&middot;</span>
       <a href="https://github.com/rede97/ugreen-WakeOnLan" target="_blank" style="color:#00d4aa;font-size:0.8rem;text-decoration:none">GitHub</a>
     </div>

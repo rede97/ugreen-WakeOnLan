@@ -43,10 +43,12 @@ async function loadDevices() {
           '</div>' +
           '<div class="mac">' + esc(dev.mac) + '</div>' +
         '</div>' +
-        '<button class="btn btn-wake" title="Wake up" ' +
-          'onclick="wakeDevice(\'' + escAttr(dev.mac) + '\',\'' + escAttr(dev.interface) + '\')">&#9654;</button>' +
-        '<button class="btn btn-del" title="Delete" ' +
-          'onclick="delDevice(\'' + escAttr(dev.name) + '\',\'' + escAttr(dev.mac) + '\',\'' + escAttr(dev.interface) + '\')">&#10005;</button>' +
+        '<div class="btn-row">' +
+          '<button class="btn btn-wake" title="Wake up" ' +
+            'onclick="wakeDevice(\'' + escAttr(dev.mac) + '\',\'' + escAttr(dev.interface) + '\')">&#9654; Wake</button>' +
+          '<button class="btn btn-del" title="Delete" ' +
+            'onclick="delDevice(\'' + escAttr(dev.name) + '\',\'' + escAttr(dev.mac) + '\',\'' + escAttr(dev.interface) + '\')">&#10005;</button>' +
+        '</div>' +
         '</div>';
     }).join('');
   } catch (e) {
