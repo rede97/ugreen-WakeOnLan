@@ -86,6 +86,7 @@ async function addDevice() {
 }
 
 async function delDevice(name, mac, iface) {
+  if (!confirm('Delete device "' + name + '"?')) return;
   try {
     const r = await fetch(API + '/devices', {
       method: 'DELETE',
