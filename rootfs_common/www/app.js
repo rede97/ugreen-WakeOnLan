@@ -201,7 +201,20 @@ async function pingIP(idx, ip) {
   }
 }
 
+async function checkArpCapable() {
+  try {
+    const r = await fetch(API + '/arp');
+    const d = await r.json();
+    if (d.arp_ok) {
+      document.getElementById('arp-card').style.display = '';
+    }
+  } catch (e) {
+    /* card stays hidden */
+  }
+}
+
 (async function init() {
   await loadInterfaces();
   loadDevices();
+  checkArpCapable();
 })();

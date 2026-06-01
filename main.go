@@ -66,6 +66,8 @@ func main() {
 		cmdPing(os.Args[2:])
 	case "scan":
 		cmdScan()
+	case "check":
+		cmdCheck()
 	case "help", "-h", "--help":
 		printUsage()
 	default:
@@ -85,6 +87,7 @@ Commands:
   arp                  Scan ARP table for MAC-IP pairs
   ping                 Ping an IP address via ICMP
   scan                 ARP scan + ping all entries
+  check                Check ARP and ping capabilities
   help                 Show this help
 
 Flags for add:
@@ -289,6 +292,23 @@ func cmdPing(args []string) {
 	}
 	ms := float64(dur.Microseconds()) / 1000.0
 	fmt.Printf("Reply from %s: %.2f ms\n", *ip, ms)
+}
+
+func cmdCheck() {
+	// ARP
+	_, arpErr := readArpTable()
+	if arpErr == nil {
+		fmt.Println("ARP:   available")
+	} else {
+		fmt.Printf("ARP:   unavailable (%v)\n", arpErr)
+	}
+
+	// Ping
+	if _, err := pingICMP("127.0.0.1", 1*time.Second); err == nil {
+		fmt.Println("Ping:  available")
+	} else {
+		fmt.Printf("Ping:  unavailable (%v)\n", err)
+	}
 }
 
 // --- HTTP Server ---
